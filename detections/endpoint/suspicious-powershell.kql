@@ -1,0 +1,47 @@
+// ============================================================
+// Detection: Suspicious PowerShell Activity
+// MITRE ATT&CK: T1059.001 - PowerShell
+// Platform: Microsoft Sentinel
+// Data Source: Microsoft Defender for Endpoint
+// Severity: High
+// ============================================================
+
+let SuspiciousCommands = dynamic([
+    "EncodedCommand",
+    "-enc",
+    "FromBase64String",
+    "Invoke-Expression",
+    "IEX",
+    "DownloadString",
+    "DownloadFile",
+    "WebClient",
+    "Invoke-WebRequest",
+    "Start-BitsTransfer"
+]);
+
+DeviceProcessEvents
+| where TimeGenerated >= ago(1h)
+| where FileName =~ "powershell.exe"
+    or FileName =~ "pwsh.exe"
+| extend CommandLineLower = tolower(ProcessCommandLine)
+| where CommandLineLower has_any (
+    "encodedcommand",
+    "-enc",
+    "frombase64string",
+    "invoke-expression",
+    "iex",
+    "downloadstring",
+    "downloadfile",
+    "webclient",
+    "invoke-webrequest",
+    "start-bitstransfer"
+)
+| project
+    TimeGenerated,
+    DeviceName,
+    AccountName,
+    FileName,
+    ProcessCommandLine,
+    InitiatingProcessFileName,
+    InitiatingProcessCommandLine
+| order by TimeGenerated desc
