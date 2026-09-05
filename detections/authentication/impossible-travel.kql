@@ -33,10 +33,10 @@ SigninLogs
     and isnotnull(Latitude)
     and isnotnull(Longitude)
 | extend
-    DistanceKm = geo_distance_2points(
-        pack_array(Longitude, Latitude),
-        pack_array(PreviousLongitude, PreviousLatitude)
-    ) / 1000.0,
+   DistanceKm = geo_distance_2points(
+    Longitude, Latitude,
+    PreviousLongitude, PreviousLatitude
+) / 1000.0,
     TimeDifferenceHours =
         datetime_diff('minute', TimeGenerated, PreviousTime) / 60.0
 | where TimeDifferenceHours > 0
