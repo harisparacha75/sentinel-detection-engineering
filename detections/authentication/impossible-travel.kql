@@ -1,0 +1,57 @@
+// ============================================================
+// Detection: Impossible Travel
+// MITRE ATT&CK: T1078 - Valid Accounts
+// Platform: Microsoft Sentinel
+// Data Source: Microsoft Entra ID / SigninLogs
+// Severity: Medium
+// ============================================================
+
+let TimeWindow = 24h;
+
+SigninLogs
+| where TimeGenerated >= ago(TimeWindow)
+| where ResultType == 0
+| where isnotempty(UserPrincipalName)
+| where isnotempty(LocationDetails)
+| extend
+    Country = tostring(LocationDetails.countryOrRegion),
+    City = tostring(LocationDetails.city),
+    Latitude = todouble(LocationDetails.geoCoordinates.latitude),
+    Longitude = todouble(LocationDetails.geoCoordinates.longitude)
+| where isnotempty(Country)
+| sort by UserPrincipalName asc, TimeGenerated asc
+| serialize
+| extend
+    PreviousUser = prev(UserPrincipalName),
+    PreviousTime = prev(TimeGenerated),
+    PreviousLatitude = prev(Latitude),
+    PreviousLongitude = prev(Longitude),
+    PreviousCountry = prev(Country)
+| where UserPrincipalName == PreviousUser
+| where isnotnull(PreviousLatitude)
+    and isnotnull(PreviousLongitude)
+    and isnotnull(Latitude)
+    and isnotnull(Longitude)
+| extend
+    DistanceKm = geo_distance_2points(
+        pack_array(Longitude, Latitude),
+        pack_array(PreviousLongitude, PreviousLatitude)
+    ) / 1000.0,
+    TimeDifferenceHours =
+        datetime_diff('minute', TimeGenerated, PreviousTime) / 60.0
+| where TimeDifferenceHours > 0
+| extend
+    RequiredSpeedKmh = DistanceKm / TimeDifferenceHours
+| where RequiredSpeedKmh > 800
+| project
+    TimeGenerated,
+    UserPrincipalName,
+    PreviousTime,
+    PreviousCountry,
+    Country,
+    DistanceKm,
+    TimeDifferenceHours,
+    RequiredSpeedKmh,
+    IPAddress,
+    LocationDetails
+| order by RequiredSpeedKmh desc
