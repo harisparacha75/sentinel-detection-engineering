@@ -1,0 +1,28 @@
+// ============================================================
+// Detection: Brute Force Authentication
+// MITRE ATT&CK: T1110 - Brute Force
+// Platform: Microsoft Sentinel
+// Data Source: Microsoft Entra ID / SigninLogs
+// Severity: High
+// ============================================================
+
+let TimeWindow = 1h;
+let FailedAttemptThreshold = 10;
+
+SigninLogs
+| where TimeGenerated >= ago(TimeWindow)
+| where ResultType != 0
+| summarize
+    FailedAttempts = count(),
+    TargetedUsers = dcount(UserPrincipalName),
+    TargetedAccounts = make_set(UserPrincipalName, 20),
+    Applications = make_set(AppDisplayName, 10)
+    by IPAddress
+| where FailedAttempts >= FailedAttemptThreshold
+| project
+    IPAddress,
+    FailedAttempts,
+    TargetedUsers,
+    TargetedAccounts,
+    Applications
+| order by FailedAttempts desc
