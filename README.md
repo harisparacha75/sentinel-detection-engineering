@@ -38,12 +38,12 @@ Microsoft Sentinel and KQL.
 
 | Detection | MITRE ATT&CK | Status |
 |---|---|---|
-| Password Spray | T1110.003 | Planned |
-| Brute Force Authentication | T1110 | Planned |
-| Suspicious PowerShell | T1059.001 | Planned |
-| Impossible Travel | T1078 | Planned |
-| Privilege Escalation | T1548 | Planned |
-| Suspicious Account Activity | T1078 | Planned |
+| Password Spray | T1110.003 | Implemented |
+| Brute Force Authentication | T1110 | Implemented |
+| Suspicious PowerShell | T1059.001 | Implemented |
+| Impossible Travel | T1078 |Implemented |
+| Privilege Escalation | T1548 | Implemented |
+| Suspicious Account Activity | T1078 | Implemented |
 
 ---
 
